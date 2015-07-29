@@ -1,0 +1,21 @@
+{
+  "name": "redis-client",
+  "main": "./lib/main",
+  "version": "0.0.0",
+  "description": "Redis GUI client.",
+  "keywords": [
+    "redis",
+    "database",
+    "gui"
+  ],
+  "repository": "https://github.com/geekduck/atom-redis-client",
+  "license": "MIT",
+  "engines": {
+    "atom": ">=1.0.0 <2.0.0"
+  },
+  "dependencies": {
+    "redis": "^0.12.1",
+    "space-pen": "^5.1.1",
+    "underscore-plus": "^1.6.6"
+  }
+}
