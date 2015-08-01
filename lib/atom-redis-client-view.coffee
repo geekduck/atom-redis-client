@@ -11,7 +11,7 @@ class RedisClientView extends View
     new RedisClientView(state)
 
   @content: ->
-    @div class: 'redis-client-view', =>
+    @div class: 'redis-client-view native-key-bindings', tabindex: -1, =>
       @div class: "redis-setting", =>
         @div class: "block", =>
           @label class: "inline-block", for: "redis-host", "Host:"
