@@ -69,6 +69,7 @@ class RedisClientView extends View
 
   disconnect: ->
     @redisclient?.quit()
+    @redisInfo.empty()
 
   execCommand: ->
     args = @redisInput.val().trim().split(/\s+/)
