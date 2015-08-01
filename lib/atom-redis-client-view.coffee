@@ -1,4 +1,4 @@
-{$, $$$, View} = require 'space-pen'
+{$, $$$, View, TextEditorView} = require 'atom-space-pen-views'
 _ = require 'underscore-plus'
 redis = require 'redis'
 {Emitter, Disposable, CompositeDisposable} = require 'atom'
@@ -11,15 +11,15 @@ class RedisClientView extends View
     new RedisClientView(state)
 
   @content: ->
-    @div class: 'redis-client-view native-key-bindings', tabindex: -1, =>
+    @div class: 'redis-client-view', =>
       @div class: "block", =>
         @div class: "redis-setting inline-block", =>
           @div class: "block", =>
             @label class: "inline-block", for: "redis-host", "Host:"
-            @input outlet: "inputRedisHost", id: "redis-host", class: 'inline-block', type: 'text', placeholder: "localhost"
+            @subview "inputRedisHost", new TextEditorView mini: true, placeholderText: "localhost"
           @div class: "block", =>
             @label class: "inline-block", for: "redis-port", "Port:"
-            @input outlet: "inputRedisPort", id: "redis-port", class: 'inline-block', type: 'text', placeholder: "6379"
+            @subview "inputRedisPort", new TextEditorView mini: true, placeholderText: "6379"
           @div class: "block", =>
             @div class: "button inline-block", =>
               @button outlet: "connectButton", id: "redis-connect", class: 'btn', "connect"
@@ -27,7 +27,7 @@ class RedisClientView extends View
               @button outlet: "disconnectButton", id: "redis-disconnect", class: 'btn', "disconnect"
         @div outlet: "redisInfo", class: "redis-info inline-block", =>
       @div class: "redis-console block", =>
-        @input outlet: "redisInput", id: "redis-input", class: 'inline-block', type: 'text'
+        @subview "redisInput", new TextEditorView mini: true
         @div class: "button inline-block", =>
           @button outlet: "execButton", id: "redis-exec", class: 'btn', "exec"
       @div outlet: "redisOutput", id: "redis-output"
@@ -51,8 +51,8 @@ class RedisClientView extends View
   connect: ->
     @redisclient.quit() if @redisclient
 
-    host = @inputRedisHost.val().trim() || "localhost"
-    port = @inputRedisPort.val().trim() || "6379"
+    host = @inputRedisHost.getText().trim() || "localhost"
+    port = @inputRedisPort.getText().trim() || "6379"
     options =
       max_attempts: 2
     @redisclient = redis.createClient port, host, options
@@ -82,7 +82,7 @@ class RedisClientView extends View
     @redisInfo.empty()
 
   execCommand: ->
-    args = @redisInput.val().trim().split(/\s+/)
+    args = @redisInput.getText().trim().split(/\s+/)
     method = args.shift()
     return unless _.isFunction @redisclient[method]
 
