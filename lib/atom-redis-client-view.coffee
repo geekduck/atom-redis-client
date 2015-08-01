@@ -34,6 +34,7 @@ class RedisClientView extends View
 
   constructor: ->
     super
+    @emitter = new Emitter
     @disposables = new CompositeDisposable
     @eventHandler()
 
@@ -50,11 +51,20 @@ class RedisClientView extends View
   connect: ->
     @redisclient.quit() if @redisclient
 
-    @redisclient = redis.createClient()
+    host = @inputRedisHost.val().trim() || "localhost"
+    port = @inputRedisPort.val().trim() || "6379"
+    options =
+      max_attempts: 2
+    @redisclient = redis.createClient port, host, options
     @redisclient.on "ready", =>
+      @emitter.emit 'did-change-title'
       @redisclient.info (err, info) =>
         return if err
         @renderServerInfo(info)
+    @redisclient.on "end", =>
+      @emitter.emit 'did-change-title'
+    @redisclient.on "error", (err) =>
+      console.dir err
 
   renderServerInfo: (serverInfo)->
     @redisInfo.empty()
@@ -85,13 +95,18 @@ class RedisClientView extends View
   serialize: ->
     deserializer: 'RedisClientView'
 
-  # 新規メソッド イベント関連のオブジェクトを破棄
   destroy: ->
     @redisclient?.quit()
     @disposables.dispose()
 
+  onDidChangeTitle: (callback) ->
+    @emitter.on 'did-change-title', callback
+
   getTitle: ->
-    "Redis client"
+    if @redisclient?.ready
+      "Redis client " + @redisclient.address
+    else
+      "Redis client"
 
   getURI: ->
     "redis-client://view"
