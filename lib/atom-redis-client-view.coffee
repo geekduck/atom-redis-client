@@ -12,21 +12,25 @@ class RedisClientView extends View
 
   @content: ->
     @div class: 'redis-client-view native-key-bindings', tabindex: -1, =>
-      @div class: "redis-setting", =>
-        @div class: "block", =>
-          @label class: "inline-block", for: "redis-host", "Host:"
-          @input outlet: "inputRedisHost", id: "redis-host", class: 'inline-block', type: 'text', placeholder: "localhost"
-        @div class: "block", =>
-          @label class: "inline-block", for: "redis-port", "Port:"
-          @input outlet: "inputRedisPort", id: "redis-port", class: 'inline-block', type: 'text', placeholder: "6379"
-        @div class: "block", =>
-          @button outlet: "connectButton", id: "redis-connect", class: 'inline-block', "connect"
-          @button outlet: "disconnectButton", id: "redis-disconnect", class: 'inline-block', "disconnect"
-      @div class: "redis-console", =>
-        @input outlet: "method", id: "redis-method", class: 'inline-block', type: 'text'
-        @input outlet: "key", id: "redis-key", class: 'inline-block', type: 'text'
-        @input outlet: "value", id: "redis-value", class: 'inline-block', type: 'text'
-        @button outlet: "execButton", id: "redis-exec", class: 'inline-block', "exec"
+      @div class: "block", =>
+        @div class: "redis-setting inline-block", =>
+          @div class: "block", =>
+            @label class: "inline-block", for: "redis-host", "Host:"
+            @input outlet: "inputRedisHost", id: "redis-host", class: 'inline-block', type: 'text', placeholder: "localhost"
+          @div class: "block", =>
+            @label class: "inline-block", for: "redis-port", "Port:"
+            @input outlet: "inputRedisPort", id: "redis-port", class: 'inline-block', type: 'text', placeholder: "6379"
+          @div class: "block", =>
+            @div class: "button inline-block", =>
+              @button outlet: "connectButton", id: "redis-connect", class: 'btn', "connect"
+            @div class: "button inline-block", =>
+              @button outlet: "disconnectButton", id: "redis-disconnect", class: 'btn', "disconnect"
+        @div outlet: "redisInfo", class: "redis-info inline-block", =>
+      @div class: "redis-console block", =>
+        @input outlet: "redisInput", id: "redis-input", class: 'inline-block', type: 'text'
+        @div class: "button inline-block", =>
+          @button outlet: "execButton", id: "redis-exec", class: 'btn', "exec"
+      @div outlet: "redisOutput", id: "redis-output"
 
   constructor: ->
     super
@@ -47,19 +51,35 @@ class RedisClientView extends View
     @redisclient.quit() if @redisclient
 
     @redisclient = redis.createClient()
-    @redisclient.on "ready", ->
-      console.dir @.server_info
+    @redisclient.on "ready", =>
+      @redisclient.info (err, info) =>
+        return if err
+        @renderServerInfo(info)
+
+  renderServerInfo: (serverInfo)->
+    @redisInfo.empty()
+    serverInfo.split("\n").forEach (info) =>
+      info.trim()
+      domClass = ""
+      if info.charAt(0) is "#"
+        domClass = "category text-info"
+      else
+        domClass = "info-item"
+      @redisInfo.append "<div class='#{domClass}'>#{info}</div>"
 
   disconnect: ->
     @redisclient?.quit()
 
   execCommand: ->
-    method = @method.val()
-    if method == "set"
-      @redisclient.set @key.val(), @value.val()
-    else if method == "get"
-      @redisclient.get @key.val() , (err, resp) ->
-        console.dir resp
+    args = @redisInput.val().trim().split(/\s+/)
+    method = args.shift()
+    return unless _.isFunction @redisclient[method]
+
+    args.push (err, resp) =>
+      resp = JSON.stringify resp
+      @redisOutput.prepend "<div>#{resp}</div>"
+
+    @redisclient[method].apply @redisclient, args
 
   serialize: ->
     deserializer: 'RedisClientView'

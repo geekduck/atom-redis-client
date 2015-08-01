@@ -4,5 +4,27 @@
 // for a full listing of what's available.
 @import "ui-variables";
 
-.atom-redis-client {
+.redis-client-view {
+  margin: 20px;
+  padding: 20px;
+  color: @text-color-highlight;
+  overflow: scroll;
+  background-color: @app-background-color;
+  input[type=text] {
+    color: black;
+  }
+  .redis-info {
+    .info-item {
+      margin-left: 10px;
+    }
+    color: @text-color;
+    width: 40%;
+    height: 300px;
+    overflow: scroll;
+  }
+  #redis-output {
+    :first-child {
+      background-color: @background-color-selected;
+    }
+  }
 }
